@@ -19,6 +19,19 @@ const notificationQueries = {
     }
   },
 
+  getUnreadNotificationCount: async (userId) => {
+    try {
+      const result = await sql.query`
+        SELECT COUNT(*) as count
+        FROM notifications
+        WHERE receiverUserId = ${userId} AND isRead = 0`;
+      return result.recordset[0].count;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw err;
+    }
+  },
+
   getReadNotifications: async (userId) => {
     try {
       const result = await sql.query`
@@ -60,6 +73,18 @@ const notificationQueries = {
       await sql.query`INSERT INTO notifications (type, isRead, createdAt, receiverUserId, senderUserId, postId) VALUES (${type}, 0, ${createdAt}, ${receiverUserId}, ${senderUserId}, ${postId})`;
     } catch (err) {
       console.error("Database insert error:", err);
+      throw err;
+    }
+  },
+
+  // delete notification if it is unread and action is undone
+  deleteNotification: async (notificationId) => {
+    try {
+      await sql.query`
+        DELETE FROM notifications 
+        WHERE id = ${notificationId}`;
+    } catch (err) {
+      console.error("Database delete error:", err);
       throw err;
     }
   },

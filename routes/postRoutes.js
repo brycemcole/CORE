@@ -10,10 +10,9 @@ const { getLinkPreview } = require("../utils/utilFunctions");
 const userQueries = require("../queries/userQueries");
 const marked = require("marked");
 const { util } = require("chai");
-const cacheMiddleware = require("../middleware/cache");
 
 // Route for viewing all posts
-router.get("/posts", cacheMiddleware(1200), async (req, res) => {
+router.get("/posts", async (req, res) => {
   try {
     const posts = await postQueries.getPosts();
     res.render("posts.ejs", { user: req.user, error: null, posts: posts });
@@ -114,6 +113,7 @@ router.post(
 router.get("/posts/:postId", async (req, res) => {
   try {
     const postId = req.params.postId;
+    let user = req.user;
 
     // Fetch all comments related to the post
     const query = `
@@ -187,6 +187,19 @@ router.get("/posts/:postId", async (req, res) => {
     const fetchUserAndParentDetails = async (comment) => {
       comment.user = await getUserDetails(comment.user_id);
 
+      // Fetch the user reaction for the current comment
+      if (user) {
+        const reactionQuery = `
+        SELECT action_type
+        FROM UserCommentActions
+        WHERE comment_id = CAST('${comment.id}' AS VARCHAR(50)) AND user_id = CAST(${user.id} AS NVARCHAR(50));
+      `;
+        const reactionResult = await sql.query(reactionQuery);
+        comment.userReaction = reactionResult.recordset[0]?.action_type || null;
+      } else {
+        comment.userReaction = null;
+      }
+
       // Use the new function to get the parent author's username
       if (comment.parent_comment_id || comment.post_id) {
         comment_parent_username =
@@ -207,7 +220,7 @@ router.get("/posts/:postId", async (req, res) => {
     await Promise.all(nestedComments.map(fetchUserAndParentDetails));
 
     // Fetch post details
-    const postResult = await utilFunctions.getPostData(postId);
+    const postResult = await utilFunctions.getPostData(postId, req.user);
 
     // Construct postData
     const postData = {

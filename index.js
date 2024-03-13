@@ -5,8 +5,7 @@ const flash = require("express-flash");
 const session = require("express-session");
 const methodOverride = require("method-override");
 const sql = require("mssql");
-const cluster = require("cluster");
-const os = require("os");
+const rateLimit = require("express-rate-limit");
 
 // Custom modules
 const environment = require("./config/environment");
@@ -23,7 +22,11 @@ const apiRoutes = require("./routes/apiRoutes");
 const generalRoutes = require("./routes/generalRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const communityRoutes = require("./routes/communityRoutes");
-
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5000,
+  message: "bro please azure costs are so high",
+});
 const app = express();
 
 // Database connection
@@ -53,6 +56,7 @@ app.use(
     cookie: { secure: environment.isProduction, maxAge: 1000 * 60 * 60 * 24 },
   })
 );
+app.use(limiter);
 
 app.use(passport.initialize());
 app.use(passport.session());

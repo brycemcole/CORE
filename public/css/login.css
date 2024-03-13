@@ -34,13 +34,13 @@ main {
 }
 
 #register {
+  max-width: 500px;
   padding: 20px 20px;
   background-color: var(--light-mode-body-color);
   border: 0;
   width: 100%;
   box-sizing: border-box;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+
 }
 
 #register a, #forgot-pass a {
@@ -49,13 +49,12 @@ main {
 }
 
 #login {
+  max-width: 500px;
   padding: 20px 20px;
   background-color: var(--light-mode-body-color);
-  border: 0;
   width: 100%;
   box-sizing: border-box;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  border: 0;
 }
 
 #forgot-pass {

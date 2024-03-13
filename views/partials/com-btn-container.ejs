@@ -63,16 +63,26 @@ trending_up
             window.location.href = `/communities/${community.id}`;
           };
 
-          // Add content to communityElement here. Example:
+          const tint = isMobile ? getTintFromName(community.name) : '';
+
           communityElement.innerHTML = `
-                <span class="material-symbols-outlined">${community.mini_icon}</span>
-                    <div class="community-name">${isMobile ? `${community.shortname}` : community.name}</div>
+                <span class="material-symbols-outlined" style="${isMobile ? `color: ${tint};` : ''}">${community.mini_icon}</span>
+                <div class="community-name">${isMobile ? community.shortname : community.name}</div>
             `;
 
           communitiesContainer.appendChild(communityElement);
         });
       })
       .catch(error => console.error('Error fetching communities:', error));
+  }
+
+  function getTintFromName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return `#${'00000'.substring(0, 6 - color.length) + color}`;
   }
 
 

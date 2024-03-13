@@ -83,6 +83,16 @@ router.delete("/:notificationId", async (req, res) => {
   }
 });
 
+router.get("/:userId/unread-count", checkAuthenticated, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const count = await notificationQueries.getUnreadNotificationCount(userId);
+    res.json({ count });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Mark all notifications as read for a user
 router.put("/markAllAsRead/:userId", async (req, res) => {
   try {

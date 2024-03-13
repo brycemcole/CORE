@@ -105,9 +105,16 @@
   }
   
   .post-body img {
+    box-sizing: border-box;
     max-width: 100%;
     height: auto;
-    margin: 20px 0; 
+    border: 0;
+    border-radius: 18px;
+  }
+
+  .post-body .image-container {
+    padding: 10px;
+    white-space-collapse: collapse;
   }
 
   .post-body > :first-child {

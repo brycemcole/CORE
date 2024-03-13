@@ -19,6 +19,23 @@ const fetchCommitDetails = async (commitUrl) => {
   }
 };
 
+const getLatestCommit = async () => {
+  try {
+    const response = await axios.get(
+      "https://api.github.com/repos/brycemcole/CORE/commits"
+    );
+    const latestCommit = response.data[0];
+    return {
+      message: latestCommit.commit.message,
+      author: latestCommit.author.login,
+      date: latestCommit.commit.author.date,
+    };
+  } catch (error) {
+    console.error("Error fetching latest commit:", error.message);
+    return {};
+  }
+};
+
 const fetchCommits = async () => {
   try {
     const currentTime = Date.now();
@@ -56,4 +73,4 @@ const fetchCommits = async () => {
   }
 };
 
-module.exports = { fetchCommits };
+module.exports = { fetchCommits, getLatestCommit };

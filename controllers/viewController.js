@@ -19,6 +19,37 @@ const viewController = {
     }
   },
 
+  renderFollowers: async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await userQueries.findByUsername(username);
+      const followers = await userQueries.getFollowers(user.id);
+      res.render("user_followers.ejs", { user: req.user, followers });
+    } catch (err) {
+      res.render("error.ejs", {
+        user: req.user,
+        error: { message: err.message },
+      });
+    }
+  },
+
+  renderFollowing: async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await userQueries.findByUsername(username);
+      const following = await userQueries.getFollowing(user.id);
+      res.render("user_following.ejs", {
+        user: req.user,
+        followers: following, // lmfao. 
+      });
+    } catch (err) {
+      res.render("error.ejs", {
+        user: req.user,
+        error: { message: err.message },
+      });
+    }
+  },
+
   renderLogin: async (req, res) => {
     res.render("login.ejs", { user: req.user });
   },
@@ -30,6 +61,7 @@ const viewController = {
   renderUserProfile: async (req, res) => {
     try {
       const username = req.params.username;
+      const userId = req.user ? req.user.id : null;
       const otheruser = await userQueries.findByUsername(username);
       const posts = await userQueries.getPostsByUserIdUserProfile(otheruser.id);
       const comments = await userQueries.getCommentsByUserIdUserProfile(
@@ -37,6 +69,11 @@ const viewController = {
       );
 
       if (otheruser) {
+        let isFollowing = false;
+        if (userId) {
+          isFollowing = await userQueries.isFollowing(userId, otheruser.id);
+        }
+
         res.render("user_profile.ejs", {
           otheruser: otheruser,
           user: req.user,
@@ -44,6 +81,7 @@ const viewController = {
           comments: comments,
           editfunction: userQueries.updateField,
           linkify: utilFunctions.linkify,
+          isFollowing: isFollowing,
         });
       } else {
         res.render("404.ejs", { user: req.user });

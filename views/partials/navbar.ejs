@@ -133,6 +133,7 @@
               <span class="material-symbols-outlined" id="nb-icon">
                 notifications
               </span>
+              <span id="unreadCount" class="count-bubble"></span>
             </a>
           </li>
           <% } else { %>
@@ -144,6 +145,12 @@
               <img src="<%= user.avatar %>" alt="Avatar" class="user-avatar" id="user-avatar">
 
               <div class="avatar-dropdown" style="display: none;">
+                <div class="avatar-dropdown-user-info">
+                  <div class="avatar-dropdown-user-info-info">
+                    <%= user.firstname %> <%= user.lastname %>
+                  </div>
+                </div>
+
                 <a href="/profile/<%= user.username %>">
                   <div class="avatar-dropdown-item">
                     <span class="material-symbols-outlined" id="nb-icon">
@@ -152,16 +159,6 @@
                     Profile
                   </div>
                 </a>
-                <% if (user) { %>
-                <a href="/edit-profile">
-                  <div class="avatar-dropdown-item">
-                    <span class="material-symbols-outlined" id="nb-icon">
-                      settings
-                    </span>
-                    Settings
-                  </div>
-                </a>
-                <% } %>
                 <a href="#" onclick="document.getElementById('logoutForm').submit()">
                   <div class="avatar-dropdown-item">
                     <span class="material-symbols-outlined" id="nb-icon">
@@ -193,7 +190,89 @@
   </div>
 </nav>
 
+<div class="latest-commit-banner" id="latestCommitBanner" style="display: none;">
+  <div class="latest-commit-info">
+    <div class="latest-commit-main">
+      <span class="latest-commit-message"></span>
+      <span class="latest-commit-date"></span>
+    </div>
+    <button id="closeCommitBanner">X</button>
+  </div>
+</div>
+
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const banner = document.getElementById('latestCommitBanner');
+    const closeButton = document.getElementById('closeCommitBanner');
+
+
+    function createHashFromString(string) {
+      var hash = 0,
+        i, chr;
+      if (string.length === 0) return hash;
+      for (i = 0; i < string.length; i++) {
+        chr = string.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+    }
+
+    function fetchLatestCommit() {
+      fetch('/api/get-latest-commit')
+        .then(response => response.json())
+        .then(data => {
+          const commitMessage = data.message;
+          const commitHash = createHashFromString(commitMessage);
+          const storedHash = localStorage.getItem('commitBannerClosed');
+
+          if (storedHash !== String(commitHash)) {
+            const commitAuthor = data.author;
+            const commitDate = new Date(data.date).toLocaleString();
+            document.querySelector('.latest-commit-message').textContent = commitMessage + ' by ' + commitAuthor;
+            document.querySelector('.latest-commit-date').textContent = "Updated at: " + commitDate.split(',')[0] + ' ' + commitDate.split(',')[1];
+            banner.style.display = 'block';
+          } else {
+            banner.style.display = 'none';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching latest commit:', error);
+        });
+    }
+
+    // Function to close the banner and store the state in localStorage
+    function closeBanner() {
+      banner.style.display = 'none';
+      // Get the commit message again to create a hash
+      const commitMessage = document.querySelector('.latest-commit-message').textContent;
+      const commitHash = createHashFromString(commitMessage.split(' by ')[0]); // Assuming commit message is before ' by '
+      localStorage.setItem('commitBannerClosed', String(commitHash));
+    }
+
+    // Event listener for the close button
+    closeButton.addEventListener('click', closeBanner);
+
+    // Fetch the latest commit information on page load
+    fetchLatestCommit();
+  });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    <% if (user) { %>
+    const userId = '<%- user.id %>';
+    const response = await fetch(`/notifications/${userId}/unread-count`);
+    const data = await response.json();
+    const unreadCount = data.count;
+
+    const unreadCountElement = document.getElementById('unreadCount');
+    if (unreadCount > 0) {
+      unreadCountElement.textContent = unreadCount;
+      unreadCountElement.style.display = 'inline-block';
+    } else {
+      unreadCountElement.style.display = 'none';
+    }
+    <% } %>
+  });
   document.addEventListener('DOMContentLoaded', function() {
     const expandSearchBtn = document.getElementById('expandSearch');
     const searchForm = document.getElementById('searchForm');
@@ -256,7 +335,7 @@
             postItem.onclick = function() {
               window.location.href = `/posts/${post.id}`;
             };
-            postItem.textContent = `${post.title}`; // Label each result as 'Post'
+            postItem.textContent = `${post.post_type} - ${post.title}`; // Label each result as 'Post'
             searchResultsContainer.appendChild(postItem);
           });
         }
@@ -280,7 +359,7 @@
             userImage.style.height = '24px'; // Set the height of the image
             userImage.style.borderRadius = '100%'; // Make the image round
 
-            userItem.textContent = `${user.username}`; // Label each result as 'User'
+            userItem.innerHTML = `${user.firstname} ${user.lastname} (${user.username})`; // Label each result as 'User'
             userItem.appendChild(userImage); // Append the image to the user item
             searchResultsContainer.appendChild(userItem);
           });

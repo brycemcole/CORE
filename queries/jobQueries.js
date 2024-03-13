@@ -83,21 +83,6 @@ const jobQueries = {
       skills = skills.split(",").map((skill) => skill.trim());
     }
 
-    console.log(
-      title,
-      salary,
-      experienceLevel,
-      location,
-      postedDate,
-      company_id,
-      link,
-      expiration_date,
-      tags,
-      description,
-      salary_max,
-      recruiter_id,
-      skills
-    );
 
     try {
       // Insert the job posting into the JobPostings table

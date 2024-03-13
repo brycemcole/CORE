@@ -3,8 +3,22 @@ const sql = require("mssql");
 const userQueries = {
   findByUsername: async (username) => {
     try {
-      const result =
-        await sql.query`SELECT * FROM users WHERE username = ${username}`;
+      const result = await sql.query`
+      SELECT 
+        u.*, 
+        (
+          SELECT COUNT(*) 
+          FROM user_relationships 
+          WHERE followed_id = u.id
+        ) AS followerCount,
+        (
+          SELECT COUNT(*) 
+          FROM user_relationships 
+          WHERE follower_id = u.id
+        ) AS followingCount
+      FROM users u
+      WHERE u.username = ${username}`;
+
       return result.recordset[0];
     } catch (err) {
       console.error("Database query error:", err);
@@ -150,8 +164,6 @@ const userQueries = {
         "currentJob_begindate",
       ];
 
-      console.log(field, value, userId);
-
       // Check if the field is valid
       if (!validFields.includes(field)) {
         throw new Error(`Invalid field name: ${field}`);
@@ -185,6 +197,101 @@ const userQueries = {
         `Failed to update field ${field} for user ID: ${userId} with value: ${value}`
       );
 
+      throw err;
+    }
+  },
+  followUser: async (followerId, followedId) => {
+    try {
+      // Check if the follow relationship already exists
+      const existingRelationship = await sql.query`
+        SELECT * 
+        FROM user_relationships
+        WHERE follower_id = ${followerId} AND followed_id = ${followedId}`;
+
+      if (existingRelationship.recordset.length > 0) {
+        throw new Error("User is already following this user");
+      }
+
+      // Insert the new follow relationship
+      await sql.query`
+        INSERT INTO user_relationships (follower_id, followed_id, created_at)
+        VALUES (${followerId}, ${followedId}, GETDATE())`;
+
+      return true;
+    } catch (err) {
+      console.error("Database insert error:", err);
+      throw err;
+    }
+  },
+  unfollowUser: async (followerId, followedId) => {
+    try {
+      // Delete the follow relationship
+      const result = await sql.query`
+        DELETE FROM user_relationships
+        WHERE follower_id = ${followerId} AND followed_id = ${followedId}`;
+
+      if (result.rowsAffected[0] === 0) {
+        throw new Error("User is not following this user");
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Database delete error:", err);
+      throw err;
+    }
+  },
+  isFollowing: async (followerId, followedId) => {
+    try {
+      const result = await sql.query`
+        SELECT COUNT(*) AS count
+        FROM user_relationships
+        WHERE follower_id = ${followerId} AND followed_id = ${followedId}`;
+
+      return result.recordset[0].count > 0;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw err;
+    }
+  },
+  getFollowerCount: async (userId) => {
+    try {
+      const result = await sql.query`
+        SELECT COUNT(*) AS count 
+        FROM user_relationships
+        WHERE followed_id = ${userId}`;
+
+      return result.recordset[0].count;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw err;
+    }
+  },
+
+  getFollowing: async (userId) => {
+    try {
+      const result = await sql.query`
+        SELECT u.id, u.username, u.avatar, u.firstname, u.lastname
+        FROM users u
+        JOIN user_relationships r ON u.id = r.followed_id
+        WHERE r.follower_id = ${userId}`;
+
+      return result.recordset;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw err;
+    }
+  },
+  getFollowers: async (userId) => {
+    try {
+      const result = await sql.query`
+        SELECT u.id, u.username, u.avatar, u.firstname, u.lastname
+        FROM users u
+        JOIN user_relationships r ON u.id = r.follower_id
+        WHERE r.followed_id = ${userId}`;
+
+      return result.recordset;
+    } catch (err) {
+      console.error("Database query error:", err);
       throw err;
     }
   },

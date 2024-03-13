@@ -9,8 +9,8 @@ const storage = multer.diskStorage({
     cb(null, "profile-" + Date.now() + ".jpg");
   },
 });
+const githubService = require("../services/githubService");
 const cacheMiddleware = require("../middleware/cache");
-
 const NodeCache = require("node-cache");
 const cache = new NodeCache({ stdTTL: 1200 }); // TTL is 20 minutes
 const utilFunctions = require("../utils/utilFunctions");
@@ -20,7 +20,21 @@ const postQueries = require("../queries/postQueries");
 const jobQueries = require("../queries/jobQueries");
 const sql = require("mssql");
 
-router.get("/getUsername/:id", cacheMiddleware(1200), async (req, res) => {
+const renderer = new marked.Renderer();
+renderer.image = function (href, title, text) {
+  // Return HTML string with the image and its alt text as a caption below
+  return `
+      <div class="image-container">
+          <img src="${href}" alt="${text}">
+          <p class="alt-text">${text}</p>
+      </div>
+  `;
+};
+marked.setOptions({
+  renderer: renderer,
+});
+
+router.get("/getUsername/:id", async (req, res) => {
   const id = req.params.id;
   try {
     const user = await userQueries.findById(id);
@@ -134,7 +148,8 @@ router.get("/posts/:postId/comments", async (req, res) => {
 router.get("/posts/:postId", async (req, res) => {
   try {
     const postId = req.params.postId;
-    const postData = await utilFunctions.getPostData(postId);
+    const user = req.user ? req.user : null;
+    const postData = await utilFunctions.getPostData(postId, user);
     postData.content = marked(postData.content);
     res.json(postData);
   } catch (err) {
@@ -155,7 +170,7 @@ router.get("/posts/:postId/getReaction", async (req, res) => {
   }
 });
 
-router.get("/communities", cacheMiddleware(1200), async (req, res) => {
+router.get("/communities", async (req, res) => {
   try {
     const communities = await utilFunctions.getAllCommunities();
     return res.json(communities);
@@ -175,20 +190,16 @@ router.get("/communities/:communityId/posts", async (req, res) => {
   }
 });
 
-router.get(
-  "/comments/:commentId/replies",
-  cacheMiddleware(1200),
-  async (req, res) => {
-    try {
-      const commentId = req.params.commentId;
-      const replies = await utilFunctions.getRepliesForComment(commentId);
-      res.json(replies);
-    } catch (err) {
-      console.error("Error fetching replies:", err);
-      res.status(500).send("Error fetching replies");
-    }
+router.get("/comments/:commentId/replies", async (req, res) => {
+  try {
+    const commentId = req.params.commentId;
+    const replies = await utilFunctions.getRepliesForComment(commentId);
+    res.json(replies);
+  } catch (err) {
+    console.error("Error fetching replies:", err);
+    res.status(500).send("Error fetching replies");
   }
-);
+});
 
 router.get("/tags", async (req, res) => {
   try {
@@ -212,19 +223,27 @@ router.get("/:postId/reactions/:userId", async (req, res) => {
   }
 });
 
+router.get("/get-latest-commit", cacheMiddleware(1200), async (req, res) => {
+  try {
+    const latestCommit = await githubService.getLatestCommit();
+    res.json(latestCommit);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching latest commit" });
+  }
+});
+
 router.get("/posts", async (req, res) => {
   try {
     const user = req.user ? req.user : null;
     const sortBy = req.query.sortBy || "best";
     const posts = await utilFunctions.getPosts(sortBy, user ? user.id : null);
-    console.log(posts);
     res.json(posts);
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-router.get("/trending-posts", cacheMiddleware(1200), async (req, res) => {
+router.get("/trending-posts", async (req, res) => {
   try {
     const posts = await utilFunctions.getTrendingPosts();
     res.json(posts);
@@ -233,7 +252,7 @@ router.get("/trending-posts", cacheMiddleware(1200), async (req, res) => {
   }
 });
 
-router.get("/user-details/:userId", cacheMiddleware(1200), async (req, res) => {
+router.get("/user-details/:userId", async (req, res) => {
   try {
     const userDetails = await utilFunctions.getUserDetails(req.params.userId);
     res.json(userDetails);
@@ -242,7 +261,7 @@ router.get("/user-details/:userId", cacheMiddleware(1200), async (req, res) => {
   }
 });
 
-router.get("/comments/:postId", cacheMiddleware(1200), async (req, res) => {
+router.get("/comments/:postId", async (req, res) => {
   try {
     let cachedData = cache.get(req.params.postId);
     if (cachedData) {
@@ -258,7 +277,7 @@ router.get("/comments/:postId", cacheMiddleware(1200), async (req, res) => {
   }
 });
 
-router.get("/tags/:postId", cacheMiddleware(1200), async (req, res) => {
+router.get("/tags/:postId", async (req, res) => {
   try {
     const tags = await utilFunctions.getTags(req.params.postId);
     res.json(tags);
@@ -267,21 +286,17 @@ router.get("/tags/:postId", cacheMiddleware(1200), async (req, res) => {
   }
 });
 
-router.get(
-  "/communities/:communitiesId",
-  cacheMiddleware(1200),
-  async (req, res) => {
-    try {
-      const communities = await utilFunctions.getCommunities(
-        req.params.communitiesId
-      );
+router.get("/communities/:communitiesId", async (req, res) => {
+  try {
+    const communities = await utilFunctions.getCommunities(
+      req.params.communitiesId
+    );
 
-      res.json(communities);
-    } catch (err) {
-      res.status(500).send(err.message);
-    }
+    res.json(communities);
+  } catch (err) {
+    res.status(500).send(err.message);
   }
-);
+});
 
 router.get("/link-preview/:link", cacheMiddleware(1200), async (req, res) => {
   try {
@@ -294,7 +309,7 @@ router.get("/link-preview/:link", cacheMiddleware(1200), async (req, res) => {
   }
 });
 
-router.get("/commits", cacheMiddleware(1200), async (req, res) => {
+router.get("/commits", async (req, res) => {
   try {
     const commits = await utilFunctions.fetchCommits();
     res.json(commits);

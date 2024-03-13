@@ -33,10 +33,10 @@ main {
 
 #login {
   padding: 20px 20px;
-  border-radius: 6px;
   background-color: var(--light-mode-body-color);
   border: 0;
-  width: 350px; 
+  width: 100%;
+  max-width: 500px; 
   box-sizing: border-box;
   text-align: center;
   display:flex;
@@ -46,10 +46,10 @@ main {
 
 #registration {
   padding: 20px 20px;
-  border-radius: 6px;
   background-color: var(--light-mode-body-color);
   border: 0;
-  width: 350px;
+  width: 100%;
+  max-width: 500px;
   box-sizing: border-box;
 }
 

@@ -14,9 +14,9 @@ const { util } = require("chai");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const { BlobServiceClient } = require("@azure/storage-blob");
+const notificationQueries = require("../queries/notificationQueries");
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING; // Ensure this is set in your environment variables
-const cacheMiddleware = require("../middleware/cache");
 
 // Home page
 router.get("/", viewController.renderHomePage);
@@ -57,11 +57,11 @@ router.get("/404", (req, res) => {
   res.render("error.ejs", { user: req.user, error });
 });
 
-router.get(
-  "/profile/:username",
-  cacheMiddleware(1200),
-  viewController.renderUserProfile
-);
+router.get("/profile/:username", viewController.renderUserProfile);
+
+router.get("/profile/:username/followers", viewController.renderFollowers);
+
+router.get("/profile/:username/following", viewController.renderFollowing);
 
 // Jobs page
 router.get("/jobs", (req, res) => {
@@ -69,16 +69,11 @@ router.get("/jobs", (req, res) => {
 });
 
 // Learning page
-router.get(
-  "/learning",
-  checkAuthenticated,
-  cacheMiddleware(1200),
-  (req, res) => {
-    res.render("learning.ejs", { user: req.user });
-  }
-);
+router.get("/learning", checkAuthenticated, (req, res) => {
+  res.render("learning.ejs", { user: req.user });
+});
 
-router.get("/updates", cacheMiddleware(1200), async (req, res) => {
+router.get("/updates", async (req, res) => {
   try {
     const commits = await githubService.fetchCommits();
 
@@ -146,8 +141,6 @@ router.post(
         updates["avatar"] = pictureUrl;
       }
 
-      console.log("Updates:", updates);
-
       // Update other user fields
       for (let field in updates) {
         if (Object.hasOwnProperty.call(updates, field)) {
@@ -162,6 +155,93 @@ router.post(
     }
   }
 );
+
+router.post(
+  "/users/:followedId/follow",
+  checkAuthenticated,
+  async (req, res) => {
+    try {
+      const followerId = req.user.id;
+      const followedId = req.params.followedId;
+      await userQueries.followUser(followerId, followedId);
+      await notificationQueries.createNotification(
+        followerId,
+        followedId,
+        "follow",
+        null
+      );
+      const updatedFollowerCount = await userQueries.getFollowerCount(
+        followedId
+      );
+      res.json({ buttonText: "Unfollow", followerCount: updatedFollowerCount });
+    } catch (err) {
+      console.error("Error following user:", err);
+      res.status(500).json({ error: "Error following user" });
+    }
+  }
+);
+
+router.post(
+  "/users/:followedId/unfollow",
+  checkAuthenticated,
+  async (req, res) => {
+    try {
+      const followerId = req.user.id;
+      const followedId = req.params.followedId;
+      await userQueries.unfollowUser(followerId, followedId);
+      const updatedFollowerCount = await userQueries.getFollowerCount(
+        followedId
+      );
+      res.json({ buttonText: "Follow", followerCount: updatedFollowerCount });
+    } catch (err) {
+      console.error("Error unfollowing user:", err);
+      res.status(500).json({ error: "Error unfollowing user" });
+    }
+  }
+);
+router.get(
+  "/users/:followedId/is-following",
+  checkAuthenticated,
+  async (req, res) => {
+    try {
+      const followerId = req.user.id;
+      const followedId = req.params.followedId;
+
+      const isFollowing = await userQueries.isFollowing(followerId, followedId);
+
+      res.json({ isFollowing });
+    } catch (err) {
+      console.error("Error checking follow status:", err);
+      res.status(500).send("Error checking follow status");
+    }
+  }
+);
+
+router.get("/users/:userId/following", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const following = await userQueries.getFollowing(userId);
+
+    res.render("following.ejs", { user: req.user, following });
+  } catch (err) {
+    console.error("Error fetching following users:", err);
+    res.status(500).send("Error fetching following users");
+  }
+});
+
+router.get("/users/:userId/followers", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const followers = await userQueries.getFollowers(userId);
+
+    res.render("followers.ejs", { user: req.user, followers });
+  } catch (err) {
+    console.error("Error fetching followers:", err);
+    res.status(500).send("Error fetching followers");
+  }
+});
 
 // Error handling middleware
 router.use((error, req, res, next) => {

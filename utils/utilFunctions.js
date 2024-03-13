@@ -15,13 +15,30 @@ const utilFunctions = {
       }
     );
   },
-  getPosts: async (sortBy = "best", userId) => {
+  getPosts: async (sortBy = "trending", userId) => {
     try {
       const result = await sql.query`
       SELECT 
-        p.id, p.created_at, p.deleted, p.title, p.content, p.link, p.communities_id,
-        p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type, p.views,
-        u.currentJob, u.username, u.avatar,
+        p.id, 
+        p.created_at, 
+        p.deleted, 
+        p.title, 
+        p.content, 
+        p.link, 
+        p.communities_id, 
+        p.react_like, 
+        p.react_love, 
+        p.react_curious, 
+        p.react_interesting, 
+        p.react_celebrate, 
+        p.post_type, 
+        p.views, 
+        u.currentJob, 
+        u.username, 
+        u.avatar,
+        CASE WHEN ur.follower_id IS NOT NULL THEN 1 ELSE 0 END AS is_following,
+        c.name AS community_name, 
+        c.shortname AS community_shortname,
         SUM(CASE WHEN upa.action_type = 'LOVE' THEN 1 ELSE 0 END) as loveCount,
         SUM(CASE WHEN upa.action_type = 'B' THEN 1 ELSE 0 END) as boostCount,
         SUM(CASE WHEN upa.action_type = 'INTERESTING' THEN 1 ELSE 0 END) as interestingCount,
@@ -29,24 +46,96 @@ const utilFunctions = {
         SUM(CASE WHEN upa.action_type = 'LIKE' THEN 1 ELSE 0 END) as likeCount,
         SUM(CASE WHEN upa.action_type = 'CELEBRATE' THEN 1 ELSE 0 END) as celebrateCount,
         (
-          SELECT TOP 1 upa2.action_type
+          SELECT TOP 1 upa2.action_type 
           FROM userPostActions upa2
           WHERE upa2.post_id = p.id AND upa2.user_id = ${userId}
         ) as userReaction
       FROM posts p
       INNER JOIN users u ON p.user_id = u.id
       LEFT JOIN userPostActions upa ON p.id = upa.post_id
+      LEFT JOIN communities c ON p.communities_id = c.id
+      LEFT JOIN user_relationships ur ON u.id = ur.followed_id AND ur.follower_id = ${userId}
       WHERE p.deleted = 0
-      GROUP BY p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, p.communities_id, u.avatar, u.currentJob,
-               p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.link_description,
-               p.link_image, p.link_title, p.post_type, p.views
+      GROUP BY 
+        p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, 
+        p.communities_id, u.avatar, u.currentJob, c.name, c.shortname, 
+        p.react_like, p.react_love, p.react_curious, p.react_interesting, 
+        p.react_celebrate, p.post_type, p.views, ur.follower_id
     `;
 
       let sortedResult;
 
       switch (sortBy) {
         case "trending":
+          const now = new Date();
+          sortedResult = result.recordset.sort((a, b) => {
+            const minutesA = (now - new Date(a.created_at)) / (1000 * 60);
+            const minutesB = (now - new Date(b.created_at)) / (1000 * 60);
+
+            const reactionsA =
+              a.loveCount * 5 +
+              a.boostCount * 4 +
+              a.interestingCount * 3 +
+              a.curiousCount * 2 +
+              a.likeCount +
+              a.celebrateCount * 3;
+            const reactionsB =
+              b.loveCount * 5 +
+              b.boostCount * 4 +
+              b.interestingCount * 3 +
+              b.curiousCount * 2 +
+              b.likeCount +
+              b.celebrateCount * 3;
+
+            const reactionsPerMinuteA = reactionsA / minutesA;
+            const reactionsPerMinuteB = reactionsB / minutesB;
+
+            const followingWeightA = a.is_following ? 1.2 : 1;
+            const followingWeightB = b.is_following ? 1.2 : 1;
+
+            return (
+              reactionsPerMinuteB * followingWeightB -
+              reactionsPerMinuteA * followingWeightA
+            );
+          });
+          break;
+
         case "top":
+          sortedResult = result.recordset.sort((a, b) => {
+            const weightedReactionsA =
+              a.loveCount * 5 +
+              a.boostCount * 4 +
+              a.interestingCount * 3 +
+              a.curiousCount * 2 +
+              a.likeCount +
+              a.celebrateCount * 3;
+            const weightedReactionsB =
+              b.loveCount * 5 +
+              b.boostCount * 4 +
+              b.interestingCount * 3 +
+              b.curiousCount * 2 +
+              b.likeCount +
+              b.celebrateCount * 3;
+            return weightedReactionsB - weightedReactionsA;
+          });
+          break;
+
+        case "new":
+          sortedResult = result.recordset.sort((a, b) => {
+            const dateA = new Date(a.created_at);
+            const dateB = new Date(b.created_at);
+
+            const followingWeightA = a.is_following ? 1.00005 : 1;
+            const followingWeightB = b.is_following ? 1.00005 : 1;
+
+            if (dateB - dateA === 0) {
+              return followingWeightB - followingWeightA;
+            }
+            return (dateB - dateA) * (followingWeightB - followingWeightA);
+          });
+          break;
+
+        case "explore":
           sortedResult = result.recordset.sort((a, b) => {
             const totalReactionsA =
               a.loveCount +
@@ -62,20 +151,14 @@ const utilFunctions = {
               b.curiousCount +
               b.likeCount +
               b.celebrateCount;
-            return totalReactionsB - totalReactionsA;
+            const viewsWeightA = Math.log(a.views + 1);
+            const viewsWeightB = Math.log(b.views + 1);
+            return (
+              totalReactionsB * viewsWeightB - totalReactionsA * viewsWeightA
+            );
           });
           break;
-        case "new":
-          sortedResult = result.recordset.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-          );
-          break;
-        case "explore":
-          // Implement your own logic for explore sorting
-          sortedResult = result.recordset.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-          );
-          break;
+
         default:
           sortedResult = result.recordset.sort(
             (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -134,8 +217,9 @@ const utilFunctions = {
   getPostsForCommunity: async (communityId) => {
     try {
       const result = await sql.query`
-        SELECT p.id, p.created_at, p.deleted, p.title, p.content, p.link, p.communities_id, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type,
+        SELECT p.id, p.created_at, p.deleted, p.title, p.content, p.link, p.communities_id, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type, p.views,
         u.currentJob, u.username, u.avatar,
+        c.name AS community_name, c.shortname AS community_shortname,
               SUM(CASE WHEN upa.action_type = 'LOVE' THEN 1 ELSE 0 END) as loveCount,
               SUM(CASE WHEN upa.action_type = 'B' THEN 1 ELSE 0 END) as boostCount,
               SUM(CASE WHEN upa.action_type = 'INTERESTING' THEN 1 ELSE 0 END) as interestingCount,
@@ -145,8 +229,9 @@ const utilFunctions = {
         FROM posts p
         INNER JOIN users u ON p.user_id = u.id
         LEFT JOIN userPostActions upa ON p.id = upa.post_id
+        LEFT JOIN communities c ON p.communities_id = c.id
         WHERE p.communities_id = ${communityId} AND p.deleted = 0
-        GROUP BY p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, p.communities_id, u.avatar, u.currentJob, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type
+        GROUP BY p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, p.communities_id, u.avatar, u.currentJob, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type, p.views, c.name, c.shortname
         ORDER BY p.created_at DESC
       `;
       return result.recordset;
@@ -194,38 +279,52 @@ const utilFunctions = {
     }
   },
 
-getPostData: async (postId) => {
+  getPostData: async (postId, user) => {
     try {
-        // Increment views counter or set to 1 if it is NULL
-        await sql.query`UPDATE posts SET views = ISNULL(views, 0) + 1 WHERE id = ${postId}`;
+      await sql.query`UPDATE posts SET views = ISNULL(views, 0) + 1 WHERE id = ${postId}`;
 
-        // Fetch the post data after updating views
-        const result = await sql.query`
-            SELECT p.id, p.created_at, p.deleted, p.title, p.content, p.link, p.communities_id, p.link_description, p.link_image, p.link_title, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, p.post_type, p.updated_at, p.views,
-            u.username, u.id as user_id, u.avatar,
-            SUM(CASE WHEN upa.action_type = 'LOVE' THEN 1 ELSE 0 END) as loveCount,
-            SUM(CASE WHEN upa.action_type = 'B' THEN 1 ELSE 0 END) as boostCount,
-            SUM(CASE WHEN upa.action_type = 'INTERESTING' THEN 1 ELSE 0 END) as interestingCount,
-            SUM(CASE WHEN upa.action_type = 'CURIOUS' THEN 1 ELSE 0 END) as curiousCount,
-            SUM(CASE WHEN upa.action_type = 'LIKE' THEN 1 ELSE 0 END) as likeCount,
-            SUM(CASE WHEN upa.action_type = 'CELEBRATE' THEN 1 ELSE 0 END) as celebrateCount
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            LEFT JOIN userPostActions upa ON p.id = upa.post_id
-            WHERE p.id = ${postId}
-            GROUP BY p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, p.communities_id, p.link_description, p.link_image, p.link_title, p.react_like, p.react_love, p.react_curious, p.react_interesting, p.react_celebrate, u.avatar, u.id, p.post_type, p.updated_at, p.views
-        `;
-        const postData = result.recordset[0];
-        if (postData) {
-            postData.user = await utilFunctions.getUserDetails(postData.user_id);
-            postData.score = postData.boostCount - postData.detractCount;
-        }
-        return postData;
+      let userId;
+      if (user) {
+        userId = user.id;
+      } else {
+        userId = null;
+      }
+
+      const result = await sql.query`
+        SELECT 
+          p.id, p.created_at, p.deleted, p.title, p.content, p.link, p.communities_id, 
+          p.link_description, p.link_image, p.link_title, p.react_like, p.react_love, 
+          p.react_curious, p.react_interesting, p.react_celebrate, p.post_type, p.updated_at, 
+          p.views, u.username, u.id as user_id, u.avatar,
+          ISNULL(u2.username, 'unknown') AS user_username,
+          ISNULL(u2.avatar, null) AS user_avatar,
+          SUM(CASE WHEN upa.action_type = 'LOVE' THEN 1 ELSE 0 END) as loveCount,
+          SUM(CASE WHEN upa.action_type = 'B' THEN 1 ELSE 0 END) as boostCount,
+          SUM(CASE WHEN upa.action_type = 'INTERESTING' THEN 1 ELSE 0 END) as interestingCount,
+          SUM(CASE WHEN upa.action_type = 'CURIOUS' THEN 1 ELSE 0 END) as curiousCount,
+          SUM(CASE WHEN upa.action_type = 'LIKE' THEN 1 ELSE 0 END) as likeCount,
+          SUM(CASE WHEN upa.action_type = 'CELEBRATE' THEN 1 ELSE 0 END) as celebrateCount,
+          upa2.action_type as userReaction
+        FROM posts p
+        INNER JOIN users u ON p.user_id = u.id
+        LEFT JOIN userPostActions upa ON p.id = upa.post_id
+        LEFT JOIN users u2 ON u.id = u2.id
+        LEFT JOIN userPostActions upa2 ON p.id = upa2.post_id AND upa2.user_id = ${userId}
+        WHERE p.id = ${postId}
+        GROUP BY 
+          p.id, p.created_at, p.deleted, u.username, p.title, p.content, p.link, p.communities_id,
+          p.link_description, p.link_image, p.link_title, p.react_like, p.react_love, p.react_curious,
+          p.react_interesting, p.react_celebrate, u.avatar, u.id, p.post_type, p.updated_at,
+          p.views, u2.username, u2.avatar, upa2.action_type
+      `;
+
+      const postData = result.recordset[0];
+      return postData;
     } catch (err) {
-        console.error("Database query error:", err);
-        throw err;
+      console.error("Database query error:", err);
+      throw err;
     }
-},
+  },
 
   getAllCommunities: async () => {
     try {
@@ -627,7 +726,6 @@ getPostData: async (postId) => {
         existingDataResult.recordset.length === 0 ||
         existingDataResult.recordset[0].time_diff > 30
       ) {
-        console.log("data old so fetching new");
         // No existing data or data is older than 30 minutes, fetch new data from GitHub API
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
         const commitsUrl = `${apiUrl}/commits`;
@@ -650,7 +748,6 @@ getPostData: async (postId) => {
         repoData = repoResponse.data;
         commitsData = commitsResponse.data;
       } else {
-        console.log("data exists no need to fetch");
         // Use existing data if it's recent enough
         repoData = JSON.parse(existingDataResult.recordset[0].raw_json);
         commitsData = JSON.parse(

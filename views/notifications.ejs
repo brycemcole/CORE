@@ -57,19 +57,25 @@
         notificationTextDiv.classList.add('notification-text-div');
         notificationHeader.classList.add('notification-header');
         notificationText.classList.add('notification-text');
-        notificationText.onclick = function() {
-          window.location.href = "/posts/" + notification.postId;
-        };
 
         if (notification.type === 'NEW_COMMENT') {
           notificationHeader.textContent = '💬 New Comment';
           notificationText.textContent = `${notification.senderUsername} commented on your post`;
+          notificationText.onclick = function() {
+            window.location.href = "/posts/" + notification.postId;
+          };
         } else if (notification.type === ['like', 'love', 'celebrate', 'curious', 'boost']) {
           notificationHeader.textContent = '🎉 New Reaction';
           notificationText.textContent = `${notification.senderUsername} liked your post`;
+          notificationText.onclick = function() {
+            window.location.href = "/posts/" + notification.postId;
+          };
         } else if (notification.type === 'follow') {
           notificationHeader.textContent = '👤 New Follower';
           notificationText.textContent = `${notification.senderUsername} followed you`;
+          notificationText.onclick = function() {
+            window.location.href = "/profile/" + notification.senderUsername;
+          };
         }
         notificationTextDiv.appendChild(notificationHeader);
         notificationTextDiv.appendChild(notificationText);

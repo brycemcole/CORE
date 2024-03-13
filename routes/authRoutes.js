@@ -27,8 +27,8 @@ router.post(
   [
     body("username")
       .trim()
-      .isLength({ min: 3 })
-      .withMessage("Username must be at least 3 characters long"),
+      .isLength({ min: 5 })
+      .withMessage("Username must be at least 5 characters long"),
     body("email")
       .trim()
       .isEmail()
@@ -37,7 +37,6 @@ router.post(
     body("password")
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters long"),
-    body("zipcode").trim().isPostalCode("any").withMessage("Invalid zip code"),
     body("firstname").trim().escape(),
     body("lastname").trim().escape(),
   ],
@@ -46,12 +45,9 @@ router.post(
       // Check for validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        // Handle the errors appropriately
-        // e.g., return or render the page with error messages
-        return res.status(400).render("register", { errors: errors.array() });
+        return res.status(400).render("error.ejs", { errors: errors.array() });
       }
 
-      // Continue with your existing code for user registration
       const userId = uuidv4();
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
       await sql.query`INSERT INTO users (
@@ -69,7 +65,7 @@ router.post(
     ${req.body.username},
     ${req.body.email},
     ${hashedPassword},
-    ${req.body.zipcode},
+    '11111',
     ${req.body.firstname},
     ${req.body.lastname},
     ${new Date()},

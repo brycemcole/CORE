@@ -1,43 +1,180 @@
+:root {
+  /* Color variables */
+  --primary-text-color: #1D2935;
+  --navbar-background-color: #F6F8FA;
+  --hover-background-color: #ddd;
+  --active-indicator-color: #0e6655;
+  --notification-background-color: #fff;
+  --dark-mode-background-color: #16191B;
+  --dark-mode-text-color: #fff;
+  --dark-mode-body-color: #000;
+  --dark-mode-border-color: #272D31;
+  --dark-mode-hover-background-color: #444;
+  --primary-text-color: #1D2935;
+  --light-mode-main-color: #fff;
+  --light-mode-text-color: #243342;
+  --light-mode-body-color: #F6F8FA;
+  --border-color: #E5EAF0;
+}
+
 .com-btn-container-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin: 10px ;
-  }
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 10px ;
+}
 
-  .communities .community-name:hover {
-    text-decoration: underline;
-  }
+.communities .community-name:hover {
+  text-decoration: underline;
+}
 
-  .communities-container {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-  
+.communities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  #com-btn-container {
-    padding: 15px 15px;
-    display: flex; 
-    background-color: white;
-    flex-direction: column;
-    overflow-x: hidden;
-    scrollbar-width: none; 
-    overflow-y: auto;
-    height: calc(100dvh - 115px);
+
+#com-btn-container {
+  padding: 15px 15px;
+  display: flex;
+  background-color: var(--light-mode-main-color);
+  flex-direction: column;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  overflow-y: auto;
+  height: calc(100dvh - 115px);
+}
+
+.communities {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.create-post-btn {
+padding: 4px;
+width: 60px;
+background: #229954;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+transition: all 0.7s ease;
+text-decoration: none;
+flex: 0 0 auto;
+text-align: center;
+display: flex;
+flex-direction: row;
+justify-content: center;
+cursor: pointer;
+font-size: 14px;
+gap: 2px;
+}
+
+.user-info {
+display: flex;
+flex-direction: row;
+align-items: center;
+gap: 3px;
+}
+
+.trending-post-content {
+display: flex;
+flex-direction: column;
+}
+.trending-post {
+display: flex;
+flex-direction: row;
+align-items: center;
+gap: 8px;
+}
+
+.trending-posts {
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+
+
+.avatar-com-container img {
+width: 24px;
+height: 24px;
+border-radius: 50%;
+}
+
+#com-btn-container h4 {
+  margin: 2px 0px;
+  margin-bottom: 4px;
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.trending-post-avatar img 
+{
+width: 16px;
+border-radius: 50%;
+height: auto;
+}
+
+#com-btn-container::-webkit-scrollbar, #job-btn-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar in WebKit browsers */
+}
+
+.trending-post-user-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.trending-post-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 100%;
+}
+
+#com-btn-container {
+  width: 20%;
+  flex: none; /* This will prevent the container from growing */
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  -webkit-scrollbar {
+    display: none;
   }
-  
-  .communities {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    align-items: center;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -ms-autohiding-scrollbar: none;
+}
+
+#com-btn-container {
+  border-right: 1px solid #D8E0E9;
+}
+
+#com-btn-container a {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: normal;
+  color: black;
+  margin: 4px 0px;
+}
+
+.comm-text {
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+}
+#com-btn-container .user {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 3px;
 }
 
 .create-post-btn {
   padding: 4px;
   width: 60px;
-  background: #229954;
+  background: #0C8346;
+  border: 1px solid #0E954F;
   border-radius: 6px;
   color: white;
   cursor: pointer;
@@ -45,7 +182,7 @@
   text-decoration: none;
   flex: 0 0 auto;
   text-align: center;
-  display: flex;
+  display: flex; 
   flex-direction: row;
   justify-content: center;
   cursor: pointer;
@@ -53,166 +190,47 @@
   gap: 2px;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 3px;
+.create-post-btn .material-symbols-outlined {
+  font-size: 17px;
+  vertical-align: -3px;
 }
 
-.trending-post-content {
-  display: flex;
-  flex-direction: column;
-}
-.trending-post {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
+.create-post-btn a:hover {
+  text-decoration: none;
 }
 
-.trending-posts {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.communities .material-symbols-outlined, .trending-post .material-symbols-outlined {
+  font-size: 19px;
 }
 
-
-.avatar-com-container img {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+#com-btn-container a:hover {
+  color: var(--active-indicator-color);
+  text-decoration: underline;
 }
 
-  #com-btn-container h4 {
-    margin: 2px 0px;
-    margin-bottom: 4px;
-    font-size: 19px;
-    font-weight: 400;
-  }
+@media (prefers-color-scheme: dark) {
+  #com-btn-container {
+      background-color: var(--dark-mode-background-color);
+    }
   
-  .trending-post-avatar img 
-  {
-  width: 16px;
-  border-radius: 50%;
-  height: auto;
+    .com-btn, .job-btn {
+      background: rgba(0,0,0,0);
+      color: var(--btn-text-dark);
+  }
+
+#com-btn-container a {
+  text-decoration: none;
+  color: #ddd;
+}
+
+#com-btn-container {
+  border-right: 1px solid var(--dark-mode-border-color);
+  border-left: 1px solid var(--dark-mode-border-color);
 }
   
-  #com-btn-container::-webkit-scrollbar, #job-btn-container::-webkit-scrollbar {
-    display: none; /* Hide scrollbar in WebKit browsers */
-  }
-
-  .trending-post-user-info {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-  }
-  .trending-post-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 100%;
-  }
-
-  #com-btn-container { 
-    width: 15%;
-    flex: none; /* This will prevent the container from growing */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    -webkit-scrollbar {
+}
+@media (max-width: 768px) {
+  #com-btn-container {
       display: none;
     }
-    
-    -ms-overflow-style: none; 
-    scrollbar-width: none;
-    -ms-autohiding-scrollbar: none;
-  
-  }
-  
-  #com-btn-container {
-    border-right: 1px solid #D8E0E9;
-  }
-
-  #com-btn-container a {
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: normal;
-    color: black;
-    margin: 4px 0px;
-  }
-
-  .comm-text {
-    display: flex;
-    flex-direction: row;
-    padding: 10px;
-  }
-  #com-btn-container .user {
-    font-size: 14px;
-    font-weight: 700;
-    margin: 3px;
-  }
-
-  .create-post-btn {
-    padding: 4px;
-    width: 60px;
-    background: #0C8346;
-    border: 1px solid #0E954F;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.7s ease;
-    text-decoration: none;
-    flex: 0 0 auto;
-    text-align: center;
-    display: flex; 
-    flex-direction: row;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    gap: 2px;
-  }
-  
-  .create-post-btn .material-symbols-outlined {
-    font-size: 17px;
-    vertical-align: -3px;
-  }
-  
-  .create-post-btn a:hover {
-    text-decoration: none;
-  }
-
-  .communities .material-symbols-outlined, .trending-post .material-symbols-outlined {
-    font-size: 16px;
 }
-  
-  #com-btn-container a:hover {
-    color: var(--active-indicator-color);
-    text-decoration: underline;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #com-btn-container {
-        background-color: #1B1F22;
-      }
-    
-      .com-btn, .job-btn {
-        background: rgba(0,0,0,0);
-        color: var(--btn-text-dark);
-    }
-
-  #com-btn-container a {
-    text-decoration: none;
-    color: #ddd;
-  }
-
-  #com-btn-container {
-    border-right: 1px solid #272D31;
-  }
-    
-  }
-  @media (max-width: 768px) {
-    #com-btn-container {
-        display: none;
-      }
-  }

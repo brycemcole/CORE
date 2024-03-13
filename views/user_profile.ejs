@@ -24,9 +24,15 @@
           <img src="/img/default-avatar.png" alt="Avatar" class="avatar" />
           <% } %>
 
-          <% if (user && otheruser.username == user.username) { %>
+          <% if (user) { %>
           <div class="edit-controls">
-            <button onclick=window.location.href='/edit-profile'>Edit Profile</button>
+            <% if (otheruser.username === user.username) { %>
+            <button onclick="window.location.href='/edit-profile'">Edit Profile</button>
+            <% } else { %>
+            <form id="followForm" action="/users/<%= otheruser.id %>/<%= isFollowing ? 'unfollow' : 'follow' %>" method="POST">
+              <button type="submit" id="followButton"><%= isFollowing ? 'Unfollow' : 'Follow' %></button>
+            </form>
+            <% } %>
           </div>
           <% } %>
 
@@ -34,27 +40,23 @@
         <div class="profile-details">
           <h2><%= otheruser.username %></h2>
           <p id="firstname-display"><%= otheruser.firstname %> <%= otheruser.lastname %></p>
-
-          <p id="email-display"><%= otheruser.email %></p>
-          <div class="link-display">
-            <img src="/src/github.png" style="height:20px;width:20px;">
-
-            <p id="github-url-display"><% if (otheruser.github_url) { %>
-              <%= otheruser.github_url%>
-              <% } else { %>No Github URL yet.<% } %></p>
+          <div class="link-display"> <img src="/src/github.png" style="height:20px;width:20px;">
+            <p id="github-url-display"> <% if (otheruser.github_url) { %> <a href="https://github.com/<%= otheruser.github_url %>"><%= otheruser.github_url %></a> <% } else { %> No Github URL yet. <% } %> </p>
           </div>
-          <div class="link-display">
-            <img src="/src/leetcodeglyph.png" style="height:20px;width:20px;">
-
-            <p id="leetcode-url-display"><% if (otheruser.leetcode_url) { %>
-              <%= otheruser.leetcode_url%>
-              <% } else { %>No LeetCode URL yet.<% } %></p>
+          <div class="link-display"> <img src="/src/leetcodeglyph.png" style="height:20px;width:20px;">
+            <p id="leetcode-url-display"> <% if (otheruser.leetcode_url) { %> <a href="https://leetcode.com/<%= otheruser.leetcode_url %>"><%= otheruser.leetcode_url %></a> <% } else { %> No LeetCode URL yet. <% } %> </p>
           </div>
-          <div class="link-display">
-            <img src="/src/linkedin.png" style="height:20px;width:20px;">
-            <p id="linkedin-url-display"><% if (otheruser.linkedin_url) { %>
-              <%= otheruser.linkedin_url%>
-              <% } else { %>No LinkedIn URL yet.<% } %></p>
+          <div class="link-display"> <img src="/src/linkedin.png" style="height:20px;width:20px;">
+            <p id="linkedin-url-display"> <% if (otheruser.linkedin_url) { %> <a href="https://www.linkedin.com/in/<%= otheruser.linkedin_url %>"><%= otheruser.linkedin_url %></a> <% } else { %> No LinkedIn URL yet. <% } %> </p>
+          </div>
+          <div class="follower-count">
+            <div class="link-display">
+              <p><a href="/profile/<%= otheruser.username %>/followers">Followers: <span id="followerCount"> <%= otheruser.followerCount %> </a></span></p>
+            </div>
+            <div class="link-display">
+              <p><a href="/profile/<%= otheruser.username %>/following">Following: <span id="followCount"> <%= otheruser.followingCount %></a></span></p>
+            </div>
+
           </div>
         </div>
 
@@ -117,7 +119,7 @@
               <h4 class="post-title">
                 <%= post.title %>
               </h4>
-                <p class="post-content" style="font-size: 14px;"><%= post.content %></p>
+              <p class="post-content" style="font-size: 14px;"><%= post.content %></p>
 
             </div>
             <% }); %>
@@ -148,6 +150,18 @@
 
   </main>
   <script>
+    document.getElementById('followForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const response = await fetch(form.action, {
+        method: form.method
+      });
+      const data = await response.json();
+      document.getElementById('followButton').textContent = data.buttonText;
+      document.getElementById('followerCount').textContent = data.followerCount;
+      form.action = form.action.includes('follow') ? form.action.replace('follow', 'unfollow') : form.action.replace('unfollow', 'follow');
+    });
+
     function editImage() {
       // Show the URL input and update button
       document.getElementById("imageEditControls").style.display = "block";

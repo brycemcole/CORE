@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/css/navbar.css" />
+  <link rel="stylesheet" href="/css/user_profile.css" />
+  <link rel="shortcut icon" href="/img/core.png" />
+</head>
+
+<style>
+  :root {
+    --primary-text-color: #1D2935;
+    --light-mode-body-color: #F6F8FA;
+    --light-mode-main-color: #fff;
+    --light-mode-hover-color: #E5EBF1;
+    --border-color: #DCE6F2;
+    --light-mode-button-color: #DCE6F2;
+    --light-mode-button-hover-color: #BECBDA;
+    --light-mode-text-color: #243342;
+    --light-mode-secondary-text-color: #586C7F;
+    --hover-background-color: #ddd;
+    --active-indicator-color: #0e6655;
+    --dark-mode-main-color: #16191B;
+    --dark-mode-body-color: #000;
+    --dark-mode-hover-color: #24292D;
+    --dark-mode-button-hover-color: #363F44;
+    --dark-mode-lighter-color: #1F2427;
+    --dark-mode-text-color: #fff;
+    --dark-mode-secondary-text-color: #999;
+    --dark-mode-border-color: #272D31;
+    --dark-mode-hover-background-color: #444;
+  }
+
+  main {
+    display: block;
+  }
+
+  .follower {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--light-mode-body-color);
+    width: 100%;
+    padding: 10px 0px;
+  }
+
+  .follower:hover {
+    background-color: var(--light-mode-hover-color);
+    cursor: pointer;
+  }
+
+  .followers-header {
+    margin: 13px 10px;
+  }
+</style>
+
+<body>
+  <%- include('partials/navbar', { pagePath: 'updates' }) %>
+  <main>
+    <h5 class="followers-header">Following</h5>
+    <div class="followers">
+      <% followers.forEach((follower) => { %>
+      <div class="follower" onclick="window.location.href='/profile/<%= follower.username %>'">
+        <img id="user-avatar" src="<%= follower.avatar %>" alt="<%= follower.username %>" />
+        <h3>
+          <%= follower.username %>
+        </h3>
+      </div>
+      <% }) %>
+    </div>
+  </main>
+</body>
+
+</html>

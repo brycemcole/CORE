@@ -18,6 +18,12 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 label {
     margin-top: 5px;
     margin-bottom: 6px;
@@ -30,6 +36,8 @@ label {
 /* Specific styles for main container and its children */
 .main-container {
     max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
     margin: 40px auto;
     padding: 12px 17px;
     background-color: var(--light-mode-body-color);

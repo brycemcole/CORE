@@ -18,66 +18,68 @@
 
 <body>
   <%- include('partials/navbar', { pagePath: 'home', user: user}) %>
+  <main>
+    <div class="container">
 
-  <div class="container">
-
-    <%- include('partials/com-btn-container', { }) %>
+      <%- include('partials/com-btn-container', { }) %>
 
 
-    <div id="posts-container" class="column">
-      <% if (typeof community === 'undefined' || community == null) { %>
-      <h5 style="margin-left: 13px;
+      <div id="posts-container" data-community-id="<%= communityId %>" class="column">
+        <% if (typeof community === 'undefined' || community == null) { %>
+        <h5 style="margin-left: 13px;
     margin-top: 10px;">Communities</h5>
 
-      <div class="community-selector">
-      </div>
-      <% } %>
-      <% if (communityId != null) { %>
-      <div class="post" style="margin-bottom: 0px; margin-top: 10px; border: 0; background-color: rgba(0,0,0,0);">
-        <div class="community-content">
-          <div class="community-info">
-            <div class="community-title">
-              <span class="comm-title">
-                <h2 style="font-weight: 500"><%= community.name%></h2>
-              </span>
-              <span class="comm-short-title">/<%= community.shortname %></span>
-              <button class="btn" id="communityActionBtn" data-action="join">Join</button>
+        <div class="community-selector">
+        </div>
+        <% } %>
+        <% if (communityId != null) { %>
+        <div class="community" style="margin: 0 13px; margin-bottom: 0px; margin-top: 10px; border: 0; background-color: rgba(0,0,0,0);">
+          <div class="community-content">
+            <div class="community-info">
+              <div class="community-title">
+                <span class="comm-title">
+                  <h2 style="font-weight: 500"><%= community.name%></h2>
+                </span>
+                <span class="comm-short-title">/<%= community.shortname %></span>
+                <button class="btn" id="communityActionBtn" data-action="join">Join</button>
 
-            </div>
-            <div class="community-flairs">
-              <span class="community-flair">👤 <%= community.MemberCount ? community.MemberCount : 0 %> members</span>
-              <span class="community-flair">✉️ <%= communityPostCount %> posts</span>
-              <span class="community-flair">🟢 1 active</span>
-            </div>
-            <div class="community-picture">
+              </div>
+              <div class="comm-description">
+                <%= community.description%>
+              </div>
+              <div class="community-flairs">
+                <span class="community-flair">👤 <%= community.MemberCount ? community.MemberCount : 0 %> members</span>
+                <span class="community-flair">✉️ <%= communityPostCount %> posts</span>
+                <span class="community-flair">🟢 1 active</span>
+              </div>
+              <div class="community-picture">
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <% } %>
-      <% if (typeof community === 'undefined' || community == null) { %>
+        <% } %>
+        <% if (typeof community === 'undefined' || community == null) { %>
 
-      <div class="mobile-jobs-container">
+        <div class="mobile-jobs-container">
+          <div class="job-header">
+            <h5>Openings</h5>
+          </div>
+          <div class="jobslist">
+
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="jobs-container">
         <div class="job-header">
-          <h5>Openings</h5>
+          <h3>Openings</h3>
         </div>
         <div class="jobslist">
-          <!-- Job previews will be dynamically loaded here -->
+
         </div>
       </div>
-      <% } %>
     </div>
-    <div class="jobs-container">
-      <div class="job-header">
-        <h3>Openings</h3>
-      </div>
-      <div class="see-more">
-        <img loading="lazy" src="./src/core.png" class="company-logo" id="see-more-core-logo">
-        <span id="see-more-separator">&#183;</span>
-        <a href="/jobs">See More</a>
-      </div>
-    </div>
-  </div>
+  </main>
 
   <script defer>
     document.addEventListener('DOMContentLoaded', () => {
@@ -88,7 +90,13 @@
       fetch('/api/jobs')
         .then(response => response.json())
         .then(jobs => {
-          const jobslistContainer = document.querySelector('.jobslist');
+          const isMobile = window.matchMedia('(max-width: 768px)').matches;
+          let jobslistContainer;
+          if (isMobile) {
+            jobslistContainer = document.querySelector('#posts-container > div.mobile-jobs-container > div.jobslist');
+          } else {
+            jobslistContainer = document.querySelector('body > main > div.container > div.jobs-container > div.jobslist');
+          }
           jobslistContainer.innerHTML = jobs.map(job => `
           <div class="job" onclick="window.location.href='/jobs/${job.id}'">
             <div class="job-content">
@@ -209,7 +217,7 @@
     }
 
 
-    function fetchAndDisplayPosts(communityId = null, sortBy = 'best') {
+    function fetchAndDisplayPosts(communityId = null, sortBy = 'trending') {
       const loggedIn = typeof user !== 'undefined' && user !== null;
       let apiUrl;
 
@@ -234,36 +242,37 @@
           communityHeader.className = 'community-header';
           communityHeader.innerHTML = `
         <div class="post-header-title">
-          <h5>Posts</h5>
+          <h5>${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)} Posts</h5> 
         </div>
         <div class=post-header-buttons style="position:relative;">
+                  <button class="header-button" id="filter-button" onclick="toggleFilterMenu()">
+<span class="material-symbols-outlined">
+filter_list
+</span>
+          </button>
                   <% if (user) { %>
             <button class="header-button" id="post-button" onclick="window.location.href='/post/create'" style="padding: 6px 13px; margin-right: 7px;">+</button>
           <% } %>
-          <button class="header-button" id="filter-button" onclick="toggleFilterMenu()">${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
-            <span class="material-symbols-outlined">
-              expand_more
-            </span>
-          </button>
+
           <div class="filter-menu" id="filterMenu">
             <button class="filter-button" onclick="filterPosts('trending')">
               <span style="margin-left: 10px;">Trending</span>
-                            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 22px;">trending_up</span>
+                            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 20px;">trending_up</span>
 
               </button>
             <button class="filter-button" onclick="filterPosts('new')">
             <span style="margin-left: 10px;">New</span>
-                        <span class="material-symbols-outlined" style="font-weight: 300; font-size: 22px;">new_releases</span>
+                        <span class="material-symbols-outlined" style="font-weight: 300; font-size: 20px;">new_releases</span>
 
             </button>
             <button class="filter-button" onclick="filterPosts('top')">
             <span style="margin-left: 10px;">Top</span>
-            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 22px;">star</span>
+            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 20px;">star</span>
 
             </button>
             <button class="filter-button" onclick="filterPosts('explore')">
             <span style="margin-left: 10px;">Explore</span>
-            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 22px;">explore</span>
+            <span class="material-symbols-outlined" style="font-weight: 300; font-size: 20px;">explore</span>
 
             </button>
           </div>
@@ -311,31 +320,26 @@
             usernameDiv.appendChild(usernameLink);
 
 
-            const viewsTextDiv = document.createElement('div');
-            viewsTextDiv.className = 'views-text';
-            viewsTextDiv.innerText = post.views + " views";
+
+            const postTypeDiv = document.createElement("span");
+            postTypeDiv.className = "communities-text";
+            postTypeDiv.innerText = " posted a " + post.post_type + " in " + post.community_name;
 
 
-						const postTypeDiv = document.createElement("div");
-						postTypeDiv.className = "posttype-text";
-						postTypeDiv.innerText = post.post_type;
-
-
-						usernameDiv.appendChild(postTypeDiv);
-            usernameDiv.appendChild(viewsTextDiv);
+            usernameDiv.appendChild(postTypeDiv);
             const communityLink = document.createElement('a');
             communityLink.href = '/communities/' + post.communities_id;
             communityLink.className = 'community';
             communityLink.innerText = "";
             usernameDiv.appendChild(communityLink);
-            fetchCommunity(post.communities_id, communityLink);
+
 
 
 
             const postDateDiv = document.createElement('div');
             postDateDiv.className = 'post-date';
             postDateDiv.id = 'secondary-text';
-            postDateDiv.innerText = formatDate(post.created_at);
+            postDateDiv.innerText = formatDate(post.created_at) + " • " + post.views + " views";
             usernameDiv.appendChild(postDateDiv);
 
 
@@ -527,6 +531,13 @@
           });
           return Promise.all(fetchPromises);
 
+          if (posts.length === 0) {
+            const noPostsDiv = document.createElement('div');
+            noPostsDiv.className = 'no-posts';
+            noPostsDiv.innerText = 'No posts to show';
+            postsContainer.appendChild(noPostsDiv);
+          }
+
         })
         .catch(error => console.error('Error fetching posts:', error));
     }
@@ -612,13 +623,6 @@
     });
     <% }%>
 
-    function fetchCommunity(community_id, container) {
-      return fetch(`/api/communities/${community_id}`)
-        .then(response => response.json())
-        .then(community => {
-          container.innerHTML = community.shortname;
-        });
-    }
 
     document.addEventListener("DOMContentLoaded", function() {
       var deadlineElements = document.querySelectorAll('#job-posting-deadline');
@@ -709,7 +713,22 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => fetchAndDisplayPosts(<%= communityId %>));
+    function filterPosts(filter) {
+      const postsContainer = document.getElementById('posts-container');
+      const communityId = postsContainer.dataset.communityId;
+      const posts = postsContainer.getElementsByClassName('post');
+
+      while (posts.length > 0) {
+        posts[0].parentNode.removeChild(posts[0]);
+      }
+
+      fetchAndDisplayPosts(communityId, filter.toLowerCase());
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      const postsContainer = document.getElementById('posts-container');
+      const communityId = postsContainer.dataset.communityId;
+      fetchAndDisplayPosts(communityId);
+    });
 
     function interactWithPost(postId, user, action) {
       if (!user) {
@@ -810,21 +829,6 @@
       } else {
         reactionButton.classList.add('active');
       }
-    }
-
-
-
-
-    function filterPosts(filter) {
-      const postsContainer = document.getElementById('posts-container');
-      const posts = postsContainer.getElementsByClassName('post');
-
-      // Remove all elements with the 'post' class
-      while (posts.length > 0) {
-        posts[0].parentNode.removeChild(posts[0]);
-      }
-
-      fetchAndDisplayPosts(null, filter.toLowerCase());
     }
   </script>
 </body>

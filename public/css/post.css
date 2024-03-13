@@ -45,6 +45,12 @@
 main {
   display: flex;
   flex-direction: row;
+  overflow: hidden;
+}
+
+.main-container {
+  max-height: calc(100vh - 85px);
+  overflow: hidden;
 }
 
 .EasyMDEContainer .CodeMirror-scroll {
@@ -219,6 +225,7 @@ div .material-symbols-outlined:hover {
   width: 100%;
   background-color: var(--background-color);
   overflow-y: scroll;
+  max-width: 70%;
 }
 
 
@@ -333,6 +340,8 @@ img.blog-avatar {
   border-radius: 100%;
   height: 28px;
   aspect-ratio: 1/1;
+  object-fit: cover; 
+  overflow: hidden;
   padding: 0 !important;
   margin: 0 !important;
 }
@@ -374,7 +383,13 @@ img.blog-avatar {
 
 .dicussion-link {
   border: 1px solid var(--border-color);
+  background-color: var(--border-color);
   border-radius: 18px;
+  white-space-collapse: collapse;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  
 }
 
 .reaction-popup {
@@ -426,6 +441,8 @@ img.blog-avatar {
 .solution-avatar img {
   border-radius: 100%;
   max-height: 35px;
+  object-fit: cover; 
+  overflow: hidden;
   aspect-ratio: 1/1;
   padding: 0 !important;
   margin: 0 !important;
@@ -473,23 +490,24 @@ img.blog-avatar {
 }
 
 .link-image {
-  width: 100%;
+  max-width: 300px;
 }
 
-
-
 .large-preview-image {
-  border-radius: 6px;
+  border-radius: 18px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   margin: 0 !important;
-  width: 100%; 
   height: auto;
   display: block; 
 }
 
 .link-info {
   display: flex;
-  margin-bottom: 10px;
+  margin: 14px;
+  margin-top: 8px;
   flex-direction: column;
+  justify-content: center;
 }
 
 
@@ -587,12 +605,10 @@ img.blog-avatar {
 .post-body {
   display: flex;
   flex-direction: column;
-  max-width: 720px;
 }
 
 .post-interactions-header {
   width: 100%;
-  max-width: 720px;
   box-sizing: border-box;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
@@ -647,7 +663,7 @@ div.repliers-avatar, div.repliees-avatar {
 
 .nested-comment {
   padding-left: 12px;
-  border-left: 1px solid var(--border-color);
+  border-left: 2px solid var(--active-indicator-color);
 }
 
 .comment-main {
@@ -674,6 +690,8 @@ div.repliers-avatar, div.repliees-avatar {
   border-radius: 100%;
   height: 28px;
   aspect-ratio: 1/1;
+  object-fit: cover; 
+  overflow: hidden;
 }
 
 .comment .avatar {
@@ -780,6 +798,8 @@ a.comment-user-info:hover {
 
 .comment-avatar img {
   float: inline-start;
+  object-fit: cover; 
+  overflow: hidden;
 }
 
 
@@ -803,13 +823,16 @@ a.comment-user-info:hover {
 .dropdown-content {
   display: none;
   position: absolute;
-  right: 0;
-  padding: 5px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
   background-color: var(--light-mode-main-color);
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
   font-size: 16px;
   font-size: 1rem;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .dropdown-content button {
@@ -843,6 +866,14 @@ a.comment-user-info:hover {
 
 .post-content a {
   text-decoration: none;
+}
+
+.link-info-url {
+  color: var(--light-mode-secondary-text-color);
+}
+
+.link-info-title h3 {
+  margin: 0 !important;
 }
 
 .preview-text {
@@ -933,6 +964,11 @@ p.preview-description {
   box-sizing: border-box;
 }
 
+.reaction-button.active {
+  background-color: #2fa8dd4a;
+  color: #3073c1;
+  border-color: #69a4e8;
+}
 
 .project-link {
   background-color: var(--border-color);
@@ -998,6 +1034,11 @@ p.preview-description {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 5px 16px;
+}
+
+.add-comment-button:hover {
+  cursor: pointer;
+background-color: var(--light-mode-button-hover-color);
 }
 
 .reply-buttons {
@@ -1104,6 +1145,12 @@ p.preview-description {
     border-color: var(--dark-mode-border-color);
   }
 
+  .dicussion-link {
+    background-color: var(--dark-mode-border-color);
+    border-color: var(--dark-mode-border-color);
+    color: var(--dark-mode-text-color);
+  }
+
   .editor-toolbar {
     background-color: var(--dark-mode-main-color) !important;
     border-color: var(--dark-mode-border-color) !important;
@@ -1186,7 +1233,9 @@ p.preview-description {
     color: #e0e0e0; /* Light text color for preview titles and descriptions */
   }
 
-  /* Add any additional dark mode styles for other elements as needed */
+  .add-comment-button:hover {
+    background-color: var(--dark-mode-button-hover-color);
+  }
 }
 
 /* Style for the comment input field */
@@ -1212,6 +1261,7 @@ p.preview-description {
   background-color: var(--border-color);
 } 
 
+
 .reaction-choice {
   cursor: pointer;
   background: none;
@@ -1236,7 +1286,10 @@ p.preview-description {
   .sidebar-container {
     margin-top: 0px;
     padding-top: 2px;
+  }
 
+  .dropdown-content {
+    right: 0;
   }
   .sidebar-container {
     padding: 0;
@@ -1245,6 +1298,16 @@ p.preview-description {
   .post { 
       padding: 0;
       
+  }
+
+  .large-preview-image {
+    border-radius: 18px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin: 0 !important;
+    width: 100%; 
+    height: auto;
+    display: block; 
   }
 
   .sidebar-poster-avatar {
@@ -1268,6 +1331,10 @@ p.preview-description {
     height: 100%;
   }
 
+  .dicussion-link {
+    flex-direction: column;
+  }
+
   #github-link-preview {
     margin: 0;
     }
@@ -1284,8 +1351,16 @@ p.preview-description {
   }
 
 
+  .link-image {
+    width: 100%;
+  }
+
+  .link-image img {
+    width: 100%;
+  }
   .main-container {
     width: 100%;
+    max-height: calc(100vh - 65px);
   }
 
 
@@ -1303,6 +1378,7 @@ p.preview-description {
     border-radius: 0px;
     margin: 0px 0px;
     padding: 0px;
+    max-width: 100%;
   }
 
   p.post-body {
@@ -1323,6 +1399,9 @@ p.preview-description {
     font-size: 14px;
   }
 
+  .link-image {
+    max-width: 100%;
+  }
   
   .post, .comment {
     padding-bottom: 0px;

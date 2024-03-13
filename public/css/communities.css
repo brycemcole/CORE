@@ -23,6 +23,10 @@
   --dark-mode-hover-background-color: #444;
 }
 
+main {
+  display: flex;
+    justify-content: center;
+}
 
 body {
   color: var(--light-mode-text-color);
@@ -30,16 +34,16 @@ body {
 }
 
 .post, .job {
-  display: flex; 
-  background: var(--light-mode-main-color);
+  display: flex;
+  background: var(--light-mode-body-color);
   border-radius: 10px;
   margin: 10px;
   flex-direction: row;
-  justify-content: space-between; 
-  position: relative; 
+  justify-content: space-between;
+  position: relative;
   height: auto;
-  flex: 0 1 auto; 
-  transition: all 0.3s cubic-bezier(.25,.8,.25,1); 
+  flex: 0 1 auto;
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
   overflow-y: none;
 }
 
@@ -138,6 +142,7 @@ div.vote-interactions {
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 10px;
 }
 
 .post-content {
@@ -192,7 +197,7 @@ div.vote-interactions {
 }
 
 .reaction-button, .boost-button, .main-reaction-button {
-  background-color: var(--light-mode-body-color);
+  background-color: var(--border-color);
   border: 0;
   color: var(--light-mode-secondary-text-color);
   border-radius: 10px;
@@ -287,6 +292,9 @@ div.vote-interactions {
   margin-bottom: 0px;
 }
 
+#posts-container > h5 {
+  display: none;
+}
 
 
 #date-icon, #user-icon, #comments-icon, #score-icon {
@@ -411,7 +419,7 @@ div .mini-link-title {
 }
 
 .community-header, .job-header {
-  margin: 20px 10px 0px 10px;
+  margin: 10px 10px 0px 10px;
 }
 
 .mini-link-image {
@@ -538,12 +546,13 @@ div .mini-link-desc {
 /* Dark Mode Styles */
 
 .container {
-  background-color: var(--light-mode-body-color);
+  background-color: var(--light-mode-main-color);
   display: flex;
   height: calc(100dvh - 85px);
   overflow-y: hidden;
   flex-wrap: nowrap;
   flex-direction: row;
+  max-width: 1200px;
   justify-content: space-between;
 }
   
@@ -563,14 +572,14 @@ div .mini-link-desc {
 
 
 #posts-container {
+  border-right: 1px solid var(--border-color);
   width: 53%;
   flex: none;
   flex-direction: column;
   -webkit-scrollbar {
     display: none;
   }
-  
-  -ms-overflow-style: none; 
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
@@ -601,18 +610,16 @@ div .mini-link-desc {
 }
 
 .jobs-container {
-  width: 28%;
+  width: 24%;
   max-width: 500px;
   flex: none;
   display: flex;
   flex-direction: column;
   margin: 0px;
-  margin-right: 1%;
   -webkit-scrollbar {
     display: none;
   }
-  
-  -ms-overflow-style: none; 
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
@@ -662,8 +669,10 @@ div .mini-link-desc {
   align-items: center;
 }
 
+
 .reaction-button.active {
-  background-color: var(--border-color);
+  background-color: #2fa8dd4a;
+  color: #3073c1;
   border-color: #69a4e8;
 }
 
@@ -699,7 +708,6 @@ div .mini-link-desc {
 
 .community-content {
   padding: 0px;
-  margin: 0px 13px;
   padding-bottom: 13px;
 }
 
@@ -710,11 +718,20 @@ div .mini-link-desc {
   gap: 5px;
 }
 
+.comm-description {
+  padding: 5px 0;
+}
+
 
 @media (max-width: 768px) {
   .job { 
     min-width: 200px;
     }
+    
+    #posts-container {
+      border: 0;
+      }
+      
   .communities a {
     text-decoration: none;
     color: var(--primary-text-color)
@@ -747,10 +764,10 @@ div .mini-link-desc {
   }
 
   .community-selector .communities {
-    background-color: var(--light-mode-main-color);
-    border: 1px solid var(--light-mode-main-color);
+    background-color: var(--light-mode-body-color);
+    border: 1px solid var(--light-mode-body-color);
     border-radius: 10px;
-    padding: 4px 12px;
+    padding: 0px 12px;
 
     display: flex;
     flex-direction: row;
@@ -826,11 +843,19 @@ div .mini-link-desc {
 
 }
 
+.post, body > main > div.container > div.jobs-container > div.jobslist .job {
+  border: 1px solid var(--border-color);
+}
+
+body > main > div.container > div.jobs-container > div.jobslist .job .job-content {
+  padding: 10px;
+
+}
 
 @media (max-width: 768px) {
   .post {
     margin: 0;
-    background-color: var(--light-mode-main-color);
+    background-color: var(--light-mode-body-color);
     border-radius: 10px;
     border: 0;
     margin: 0 13px;
@@ -904,6 +929,8 @@ div .mini-link-desc {
   width: 30px;
   height: 30px;
   border-radius: 100%;
+  object-fit: cover; 
+  overflow: hidden;
 }
 
 .see-more {
@@ -990,11 +1017,6 @@ div .mini-link-desc {
     background-color: var(--dark-mode-body-color);
     color: var(--dark-mode-secondary-text-color);
   }
-
-  .reaction-button.active {
-    background-color: #3C4B64;
-    border-color: #3D5B8B;
-  }
   
   .comments {
   color: var(--dark-mode-secondary-text-color);
@@ -1044,7 +1066,13 @@ div .mini-link-desc {
   .post-info {
       color: #ccc; /* Lighter text color for post information */
   }
+  .post, body > main > div.container > div.jobs-container > div.jobslist .job {
+    border-color: var(--dark-mode-border-color);
+  }
 
+  #posts-container {
+    border-color: var(--dark-mode-border-color);
+  }
 
   /* Adjustments for buttons and interactive elements */
 

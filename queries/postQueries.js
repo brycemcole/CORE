@@ -111,7 +111,6 @@ const postQueries = {
       const deleteTagsRequest = new sql.Request(transaction);
       await deleteTagsRequest.query`DELETE FROM post_tags WHERE post_id = ${postId}`;
 
-      console.log(postData.tags);
       for (const tagNameOrId of postData.tags) {
         const tagRequest = new sql.Request(transaction);
         let tagId;
